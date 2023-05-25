@@ -1,25 +1,42 @@
+import s from "./Chat.module.css";
 import { useEffect, useState } from "react";
+import { socket } from "../utils/socket";
+import debug from "../debugManager/DebugManager";
 
 const Chat = () => {
-    const [messages, setMessages] = useState(['first', 'second']);
+    const [isConnected, setIsConnected] = useState(socket.connected);
 
-    const socket = new WebSocket('ws://127.0.0.1:8080');
+    const sendMsg = (event) => {
+        event.preventDefault();
+    };
 
-    socket.addEventListener("message", (event) => {
-        console.log("Message from server ", event.data);
-        setMessages([...messages, event.data]);
-    });
+    useEffect(() => {
+        function onConnect() {
+            debug.log('client socket connected!');
+            setIsConnected(true);
+        }
+    
+        function onDisconnect() {
+            debug.log('client socket disconnected!');
+            setIsConnected(false);
+        }
 
-    const addMessage = (event) => {
-        socket.send('some test data');
-    }
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
+
+        return () => {
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
+        };
+    }, []);
 
     return(
         <>
-            {
-                messages.map(message => <div key={message}>{message}</div>)
-            }
-            <button onClick={addMessage}>Send message</button>
+            <ul className={s.messages}></ul>
+            <form className={s.chat} action="">
+                <input className={s.chat__input} autoComplete="off" />
+                <button onClick={sendMsg}>Send</button>
+            </form>
         </>
     )
 }
