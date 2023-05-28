@@ -26,7 +26,7 @@ const Chat = () => {
 
         function onMessage(data) {
             debug.log(`get message from backend: ${data}`);
-            setMessages([...messages, data]);
+            setMessages(prev => [...prev, data]);
         }
 
         socket.on('connect', onConnect);
@@ -36,13 +36,14 @@ const Chat = () => {
         return () => {
             socket.off('connect', onConnect);
             socket.off('disconnect', onDisconnect);
+            socket.off('chat message', onMessage);
         };
     }, []);
 
     return(
         <>
             <ul className={s.messages}>
-                {messages.map((message) => <li>{message}</li>)}
+                {messages.map((message) => <li key={message}>{message}</li>)}
             </ul>
             <form className={s.chat} action="">
                 <input className={s.chat__input} autoComplete="off" onChange={(event) => {
